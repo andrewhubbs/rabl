@@ -1,8 +1,38 @@
 # CHANGELOG
 
-## 0.7.7 (unreleased)
+## 0.8.2
+
+ * Passing locals when rendering templates via partials or inheritance (Thanks @simsalabim)
+
+## 0.8.1
+
+ * Fix to respect @collection :root for xml output (Thanks @chinshr)
+
+## 0.8.0
+
+ * Remove multi_json dependency, simpler JSON handling
+
+## 0.7.10
+
+ * Add early support for Rails 4 (Thanks @jopotts)
+ * Add configuration option for raising on missing attributes (Thanks @ReneB)
+ * Allow caching outside the Rails environment (Thanks @flyerhzm)
+ * Fix template lookup on Rails (Thanks @vimutter)
+
+## 0.7.9
+
+ * Replace yajl with oj in docs and tests
+ * Fix handling of empty children arrays with tests (Thanks @sethvargo)
+
+## 0.7.8
+
+  * Additional fix for attribute conditional support
+
+## 0.7.7
 
   * Fix #344 to avoid: "warning: default `to_a' will be obsolete"
+  * Fix #356 by adding 'known object classes' like struct to be recognized as objects.
+  * Fix #354 by adding 'if' and 'unless' to `attribute` (Thanks @andrewhubbs)
 
 ## 0.7.6
 

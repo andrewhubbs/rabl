@@ -16,6 +16,13 @@ begin
 rescue LoadError
 end
 
+# Set default options for Oj json parser (if exists)
+begin
+  require 'oj'
+  Oj.default_options =  { :mode => :compat, :time_format => :ruby }
+rescue LoadError
+end
+
 module Rabl
   # Rabl.host
   class Configuration
@@ -28,6 +35,7 @@ module Rabl
     attr_accessor :enable_json_callbacks
     attr_accessor :bson_check_keys
     attr_accessor :bson_move_id
+    attr_writer   :json_engine
     attr_writer   :msgpack_engine
     attr_writer   :bson_engine
     attr_writer   :plist_engine
@@ -37,6 +45,8 @@ module Rabl
     attr_accessor :escape_all_output
     attr_accessor :view_paths
     attr_accessor :cache_engine
+    attr_accessor :raise_on_missing_attribute
+    attr_accessor :perform_caching
 
     DEFAULT_XML_OPTIONS = { :dasherize  => true, :skip_types => false }
 
@@ -60,18 +70,12 @@ module Rabl
       @escape_all_output     = false
       @view_paths            = []
       @cache_engine          = Rabl::CacheEngine.new
-    end
-
-    # @param [Symbol, Class] engine_name The name of a JSON engine,
-    #   or class that responds to `encode`, to use to encode Rabl templates
-    #   into JSON. For more details, see the MultiJson gem.
-    def json_engine=(engine_name_or_class)
-      JsonEngine.instance.set(engine_name_or_class)
+      @perform_caching       = false
     end
 
     # @return The JSON engine used to encode Rabl templates into JSON
     def json_engine
-      JsonEngine.instance.current_engine
+      @json_engine || (defined?(::Oj) ? ::Oj : ::JSON)
     end
 
     ##

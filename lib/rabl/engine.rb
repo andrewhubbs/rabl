@@ -21,6 +21,7 @@ module Rabl
     # Rabl::Engine.new("...source...", { :format => "xml" }).render(scope, { :foo => "bar", :object => @user })
     def render(scope, locals, &block)
       reset_options!
+      locals.merge!(locals.delete(:locals) || {})
       @_locals, @_scope = locals, scope
       self.copy_instance_variables_from(@_scope, [:@assigns, :@helpers])
       locals.each { |k,v| instance_variable_set(:"@#{k}", v) }
@@ -89,8 +90,9 @@ module Rabl
       include_root = Rabl.configuration.include_xml_root
       include_child_root = include_root && Rabl.configuration.include_child_root
       options = options.reverse_merge(:root => include_root, :child_root => include_child_root)
-      xml_options = Rabl.configuration.default_xml_options.merge(:root => @_data_name)
-      to_hash(options).to_xml(xml_options)
+      xml_options = Rabl.configuration.default_xml_options.merge(:root => collection_root_name || @_data_name)
+      result = to_hash(options)
+      result.to_xml(xml_options)
     end
 
     # Returns a bson representation of the data object
@@ -152,18 +154,15 @@ module Rabl
 
     # Indicates an attribute or method should be included in the json output
     # attribute :foo, :as => "bar"
-    # attribute :foo => :bar
+    # attribute :foo => :bar, :bar => :baz
+    # attribute :foo => :bar, :bar => :baz, :if => lambda { |r| r.foo }
     def attribute(*args)
       if args.first.is_a?(Hash) # :foo => :bar, :bar => :baz
-        args.first.each_pair { |k,v| self.attribute(k, :as => v) }
+        attr_aliases, conds = args.first.except(:if, :unless), args.first.slice(:if, :unless)
+        attr_aliases.each_pair { |k,v| self.attribute(k, conds.merge(:as => v)) }
       else # array of attributes i.e :foo, :bar, :baz
-        options = args.extract_options!
-        if options[:if] || options[:unless]
-          attr_options = { :unless => options[:unless], :if => options[:if] }.reject { |_,v| v.nil? }
-          args.each { |name| @_options[:attributes][name] = attr_options.merge({:as => options[:as] || name}) }
-        else
-          args.each { |name| @_options[:attributes][name] = options[:as] || name }
-        end
+        attr_options = args.extract_options!
+        args.each { |name| @_options[:attributes][name] = attr_options }
       end
     end
     alias_method :attributes, :attribute
@@ -235,7 +234,7 @@ module Rabl
     # format_json("{ foo : "bar" }") => "test({ foo : 'bar' })"
     def format_json(json_output)
       json_engine = Rabl.configuration.json_engine
-      json_method = json_engine.respond_to?(:dump) ? 'dump' : 'encode' # multi_json compatibility TODO
+      json_method = json_engine.respond_to?(:dump) ? 'dump' : 'encode'
       json_output = json_engine.send(json_method, json_output) unless json_output.is_a?(String)
       use_callback = Rabl.configuration.enable_json_callbacks && request_params[:callback].present?
       use_callback ? "#{request_params[:callback]}(#{json_output})" : json_output

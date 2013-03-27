@@ -34,8 +34,8 @@ module Rabl
         extends(settings[:file], settings[:options], &settings[:block])
       end if @options.has_key?(:extends)
       # Attributes
-      @options[:attributes].each_pair do |attribute, name|
-        attribute(attribute, :as => name)
+      @options[:attributes].each_pair do |attribute, settings|
+        attribute(attribute, settings)
       end if @options.has_key?(:attributes)
       # Node
       @options[:node].each do |settings|
@@ -63,16 +63,15 @@ module Rabl
 
     # Indicates an attribute or method should be included in the json output
     # attribute :foo, :as => "bar"
+    # attribute :foo, :as => "bar", :if => lambda { |m| m.foo }
     def attribute(name, options={})
-      if @_object && @_object.respond_to?(name)
-        options = options[:as] if options[:as].is_a?(Hash)
-        @_result[options[:as] || name] = data_object_attribute(name) if resolve_condition(options)
+      if @_object && attribute_present?(name) && resolve_condition(options)
+        @_result[options[:as] || name] = data_object_attribute(name)
       end
     end
     alias_method :attributes, :attribute
 
     # Creates an arbitrary node that is included in the json output
-    # node(:foo) { "bar" }
     # node(:foo) { "bar" }
     # node(:foo, :if => lambda { |m| m.foo.present? }) { "bar" }
     def node(name, options={}, &block)
@@ -127,6 +126,18 @@ module Rabl
     end
 
     private
+
+    # Checks if an attribute is present. If not, check if the configuration specifies that this is an error
+    # attribute_present?(created_at) => true
+    def attribute_present?(name)
+      if @_object.respond_to?(name)
+        return true
+      elsif Rabl.configuration.raise_on_missing_attribute
+        raise "Failed to render missing attribute #{name}"
+      else
+        return false
+      end
+    end
 
     # Returns a guess at the format in this scope
     # request_format => "xml"

@@ -9,7 +9,7 @@ module Rabl
     # Rabl::Engine.new("...source...", { :format => "xml", :root => true, :view_path => "/path/to/views" })
     def initialize(source, options={})
       @_source = source
-      @_options = options
+      @_options = options.merge(:source => @_source)
       @_view_path = options[:view_path]
     end
 
@@ -56,6 +56,7 @@ module Rabl
     # Returns a json representation of the data object
     # to_json(:root => true)
     def to_json(options={})
+      options = @_options.merge(options)
       include_root = Rabl.configuration.include_json_root
       include_child_root = Rabl.configuration.include_child_root
       options = options.reverse_merge(:root => include_root, :child_root => include_child_root)

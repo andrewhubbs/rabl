@@ -12,7 +12,7 @@ if defined?(Tilt)
     end
 
     def evaluate(scope, locals, &block)
-      @engine.render(scope, locals, &block)
+      @engine.apply(scope, locals, &block).render
     end
   end
 
@@ -20,7 +20,7 @@ if defined?(Tilt)
 end
 
 # Rails 2.X Template
-if defined?(ActionView) && defined?(Rails) && Rails.version =~ /^2/
+if defined?(ActionView) && defined?(Rails) && Rails.version.to_s =~ /^2/
   require 'action_view/base'
   require 'action_view/template'
 
@@ -41,7 +41,7 @@ if defined?(ActionView) && defined?(Rails) && Rails.version =~ /^2/
 end
 
 # Rails 3.X Template
-if defined?(ActionView) && defined?(Rails) && Rails.version =~ /^[34]/
+if defined?(ActionView) && defined?(Rails) && Rails.version.to_s =~ /^[34]/
   module ActionView
     module Template::Handlers
       class Rabl
@@ -52,7 +52,8 @@ if defined?(ActionView) && defined?(Rails) && Rails.version =~ /^[34]/
           source = template.source
 
           %{ ::Rabl::Engine.new(#{source.inspect}).
-              render(self, assigns.merge(local_assigns)) }
+              apply(self, assigns.merge(local_assigns)).
+              render }
         end # call
       end # rabl class
     end # handlers

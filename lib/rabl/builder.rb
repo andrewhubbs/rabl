@@ -193,8 +193,7 @@ module Rabl
     # cache_results { compile_hash(options) }
     def cache_results(&block)
       if template_cache_configured? && Rabl.configuration.cache_all_output && @_object.respond_to?(:cache_key)
-        #FIXME!!!! This is super evil bad code but I need to get something in place for this caching bug in ASAP.
-        result_cache_key = [@_object, @options[:root_name], Digest::MD5.hexdigest((@options[:source] || "") + (@_scope.instance_variable_get(:@_controller).instance_variable_get(:@_env)["PATH_INFO"] || "")), @options[:format]]
+        result_cache_key = [@_object, @options[:root_name], Digest::MD5.hexdigest((@options[:source] || "")), @options[:format]]
         fetch_result_from_cache(result_cache_key, &block)
       else # skip cache
         yield

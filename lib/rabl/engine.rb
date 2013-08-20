@@ -51,7 +51,7 @@ module Rabl
       _cache = @_cache if defined?(@_cache)
       cache_key, _ = *_cache || nil
       return nil if cache_key.nil?
-      Array(cache_key) + [@_options[:root_name], @_options[:format]]
+      Array(cache_key) + [@_options[:root_name], Digest::MD5.hexdigest(@_options[:source] || ""), @_options[:format]]
     end
 
     # Returns a hash representation of the data object
@@ -304,7 +304,7 @@ module Rabl
       _cache = @_cache if defined?(@_cache)
       cache_key, cache_options = *_cache || nil
       if template_cache_configured? && cache_key
-        result_cache_key = Array(cache_key) + [@_options[:root_name], @_options[:format]]
+        result_cache_key = Array(cache_key) + [@_options[:root_name], Digest::MD5.hexdigest(@_options[:source] || ""), @_options[:format]]
         if self.cache_read_on_render
           fetch_result_from_cache(result_cache_key, cache_options, &block)
         else
